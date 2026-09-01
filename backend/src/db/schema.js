@@ -1,4 +1,4 @@
-import {pgTable, text, timestamp} from "drizzle-orm/pg-core";
+import {integer, pgTable, serial, text, timestamp} from "drizzle-orm/pg-core";
 
 
 export const applications = pgTable("applications", {
@@ -7,5 +7,14 @@ export const applications = pgTable("applications", {
   role: text("role").notNull(),
   jobDescription: text("job_description").notNull(),
   currentStage: text("current_stage").notNull().default("applied"),
-  dateApplied: timestamp("date_applied").notNull.defaultNow(),
+  dateApplied: timestamp("date_applied").notNull().defaultNow(),
+})
+
+export const jobRequirements = pgTable("job_requirements", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id")
+    .references(() => applications.id)
+    .notNull(),
+  requirements: text("requirements").notNull(),
+  source: text("source").notNull().default("manual"),
 })
