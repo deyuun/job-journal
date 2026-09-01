@@ -18,3 +18,14 @@ export const jobRequirements = pgTable("job_requirements", {
   requirements: text("requirements").notNull(),
   source: text("source").notNull().default("manual"),
 })
+
+export const stageEvents = pgTable("stage_events", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id")
+    .references(
+      () => applications.id
+    )
+    .notNull(),
+  stage: text("stage").notNull(),
+  occurredAt: timestamp("occurred_at").notNull().defaultNow(),
+})
