@@ -15,7 +15,7 @@ export const jobRequirements = pgTable("job_requirements", {
   applicationId: integer("application_id")
     .references(() => applications.id)
     .notNull(),
-  requirements: text("requirements").notNull(),
+  requirement: text("requirements").notNull(),
   source: text("source").notNull().default("manual"),
 })
 
