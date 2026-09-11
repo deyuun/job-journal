@@ -3,6 +3,7 @@ import { createApplicationSchema, updateStageSchema } from "../validators/schema
 import { applications, jobRequirements, stageEvents } from "../db/schema.js";
 import { database } from "../db/index.js";
 import { desc, eq } from "drizzle-orm";
+import z from "zod";
 
 
 export const applicationsRouter = Router();
@@ -10,7 +11,7 @@ export const applicationsRouter = Router();
 applicationsRouter.post("/", async (req, res) => {
   const parsed = createApplicationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({
-    error: parsed.error.flatten()
+    error: z.flattenError(parsed.error)
   })
 
   const {company, role, jobDescription, requirements} = parsed.data;
@@ -59,7 +60,7 @@ applicationsRouter.patch("/:id/stage", async (req, res) => {
 
   if(!parsed.success) {
     return res.status(400).json({
-      error: parsed.error.flatten()
+      error: z.flattenError(parsed.error)
     })
   }
 
