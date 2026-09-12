@@ -29,7 +29,7 @@ export default function AddAplication() {
       });
       setCompany("");
       setRole("");
-      setJobDescription("");
+      setJobDescription("");    
       setRequirementsText("");
     } catch {
       setError("Couldn't save that. Check the backend is running.");
@@ -37,4 +37,43 @@ export default function AddAplication() {
       setSaving(false);
     }
   }
+
+  return (
+    <form className="intake" onSubmit={handleSubmit}>
+      <div className="intake-row">
+        <div className="field">
+          <label>Company</label>
+          <input value={company} onChange={(e) => setCompany(e.target.value) } placeholder="Acme Corp"/>
+        </div>
+        <div className="field" style={{ marginBottom: 18 }}>
+          <label>Role</label>
+          <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Junior backend developer"></input>
+        </div>
+      </div>
+
+      
+      <div className="field" style={{ marginBottom: 18 }}>
+        <label>Posting text</label>
+        <textarea
+          value={jobDescription}
+          onChange={(e) => setJobDescription(e.target.value)}
+          placeholder="Paste the listing as written"
+        />
+      </div>
+
+      <div className="field" style={{marginBottom: 18}}>
+        <label>Skills you noticed (comma seperated)</label>
+        <input
+          value={requirementsText}
+          onChange={(e) => setRequirementsText(e.target.value)}
+          placeholder="React, Typescript, 2 years experience"
+        />
+        {error && <p style={{ color: "var(--rust)", fontSize: 13 }}>{error}</p>} 
+        <button className="file-btn" type="submit" disabled={saving}>
+          {saving ? "Filing..." : "File this entry"}
+        </button>
+      </div>
+    </form>
+  )
 }
+
