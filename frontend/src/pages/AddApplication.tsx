@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createApplication } from "../api";
 
-export default function AddAplication() {
+export default function AddApplication() {
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
