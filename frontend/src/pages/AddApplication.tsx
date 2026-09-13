@@ -47,7 +47,7 @@ export default function AddApplication() {
         </div>
         <div className="field" style={{ marginBottom: 18 }}>
           <label>Role</label>
-          <input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Junior backend developer"></input>
+          <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Junior backend developer"/>
         </div>
       </div>
 
