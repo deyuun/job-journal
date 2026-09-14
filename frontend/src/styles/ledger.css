@@ -4,6 +4,8 @@
   --ink: #1F2A24;
   --rule: #C3B9A4;
   --ink-soft: #5B564B;
+  --pine: #2E5D50;
+  --rust: #8C3B2E;
 }
 
 /* Reset default browser spacing so padding/borders behave predictably */
@@ -16,22 +18,6 @@
   background-color: var(--paper);
   color: var(--ink);
   font-family: 'Public Sans', sans-serif;
-}
-
-.intake {
-  background-color: var(--paper-raised);
-  border: 1px solid var(--rule);
-  padding: 24px;
-}
-
-.intake-row {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 18px;
-}
-
-.intake-row .field {
-  flex: 1;
 }
 
 /* PAGE LAYOUT 
@@ -91,6 +77,132 @@ Everything sits inside this centered column. */
 .nav-tabs a.active {
   color: var(--ink);
   border-bottom: 2px solid var(--pine);
+}
+
+
+/* ==== ADD APPLICATION FORM ====*/
+.intake {
+  background-color: var(--paper-raised);
+  border: 1px solid var(--rule);
+  padding: 24px;
+}
+
+/* Puts two form fields side by side (like Company + Role) */
+.intake-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.intake-row .field {
+  flex: 1;
+}
+
+.field label {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+
+.field input,
+.field text-area {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  font-family: 'Public Sans', sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  padding: 4px 0;
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 90px;
+  font-family: inherit;
+}
+
+/* Highlight the field's underline when the user clicks into it */
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+ 
+.file-btn {
+  margin-top: 6px;
+  background-color: var(--ink);
+  color: var(--paper);
+  border: none;
+  font-family: 'Public Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.file-btn:hover {
+  background-color: var(--pine);
+}
+
+.file-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==== APPLICATIONS LIST ==== */
+
+.ledger-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.ledger-row.first-row {
+  border-top: 1px solid var(--ink);
+}
+
+.tab {
+  width: 6px;
+  height: 24px;
+  background-color: var(--rule);
+}
+
+.tab.stalled {
+  background-color: var(--rust);
+}
+
+.tab.moving {
+  background-color: var(--pine);
+}
+
+.tab.waiting {
+  background-color: var(--amber);
+}
+
+.ledger-company {
+  font-weight: 500;
+  font-size: 15px;
+  flex: 1;
+}
+
+.ledger-role {
+  font-size: 14px;
+  color: var(--ink-soft);
+  flex: 1;
+}
+
+.stage-select {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  padding: 5px 8px;
+  background-color: var(--paper-raised);
+  border: 1px solid var(--rule);
+  color: var(--ink);
 }
 
 
