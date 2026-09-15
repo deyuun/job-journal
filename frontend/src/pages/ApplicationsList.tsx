@@ -52,8 +52,8 @@ export default function ApplicationsList() {
             value={app.currentStage}
             onChange={(e) => handleStageChange(app.id, e.target.value)}
           >
-            {STAGES.map((s) => (
-              <option key={s} value={s}>{s}</option>
+            {STAGES.map((stage) => (
+              <option key={stage} value={stage}>{stage}</option>
             ))}
           </select>
         </div>
