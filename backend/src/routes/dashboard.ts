@@ -13,9 +13,9 @@ dashboardRouter.get("/", async(_req, res) => {
     `);
 
   const topSkills = await database.execute(sql`
-    SELECT requirement, COUNT(*) AS count
+    SELECT requirements AS requirement, COUNT(*) AS count
     FROM job_requirements
-    GROUP BY requirement
+    GROUP BY requirements
     ORDER BY count DESC
     LIMIT 10
     `)
