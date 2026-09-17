@@ -6,6 +6,8 @@
   --ink-soft: #5B564B;
   --pine: #2E5D50;
   --rust: #8C3B2E;
+  --amber: #8A6A2F;
+  
 }
 
 /* Reset default browser spacing so padding/borders behave predictably */
@@ -71,6 +73,14 @@ Everything sits inside this centered column. */
   text-decoration: none;
   padding-bottom: 4px;
   cursor: pointer;
+}
+
+.section-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 16px 0;
 }
 
 /* This class gets added to whichever tab is currently selected */
@@ -205,5 +215,43 @@ Everything sits inside this centered column. */
   color: var(--ink);
 }
 
+/*=== DASHBOARD ===*/
+.tally-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px dotted var(--rule);
+  font-size: 15px;
+}
 
+.tally-line span:last-child {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 15px;
+}
 
+.skill-line {
+  margin-bottom: 14px;
+}
+
+.skill-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.skill-head .count {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--ink-soft);
+}
+
+.skill-track {
+  height: 3px;
+  background-color: var(--rule);
+}
+
+.skill-fill {
+  height: 3px;
+  background-color: var(--pine);
+}
