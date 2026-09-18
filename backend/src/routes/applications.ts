@@ -87,3 +87,19 @@ applicationsRouter.patch("/:id/stage", async (req, res) => {
   })
 })
 
+applicationsRouter.delete("/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  await database
+    .delete(stageEvents)
+      .where(eq(stageEvents.applicationId, id));
+  await database
+    .delete(jobRequirements)
+      .where(eq(jobRequirements.applicationId, id));
+  await database
+    .delete(applications)
+      .where(eq(applications.id, id))
+
+  res.status(204).send();
+})
+
