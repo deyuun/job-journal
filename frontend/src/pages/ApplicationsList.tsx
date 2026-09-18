@@ -73,12 +73,12 @@ export default function ApplicationsList() {
               border: "none",
               color: "var(--rust)",
               cursor: "pointer",
-              fontSize: 16,
+              fontSize: 12,
               fontFamily: "IBM Plex Mono, monospace",
             }}
             aria-label={`Delete ${app.company} application`}
           >
-            ×
+            del
           </button>
         </div>
       ))}
