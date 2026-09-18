@@ -117,7 +117,7 @@ Everything sits inside this centered column. */
 }
 
 .field input,
-.field text-area {
+.field textarea {
   width: 100%;
   background: transparent;
   border: none;
@@ -130,8 +130,10 @@ Everything sits inside this centered column. */
 
 .field textarea {
   resize: vertical;
-  min-height: 90px;
+  min-height: 140px;
+  padding: 10px 12px;
   font-family: inherit;
+  border: 1px solid var(--rule);
 }
 
 /* Highlight the field's underline when the user clicks into it */
