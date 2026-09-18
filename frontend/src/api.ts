@@ -38,6 +38,16 @@ export async function getApplications(): Promise<Application[]> {
   return res.json();
 }
 
+export async function deleteApplication(id: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/applications/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete application")
+  }
+}
+
 export async function updateStage(id: number, stage: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/applications/${id}/stage`, {
     method: "PATCH",

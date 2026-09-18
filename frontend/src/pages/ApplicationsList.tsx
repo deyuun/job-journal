@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { type Application, getApplications, updateStage } from "../api"
+import { type Application, deleteApplication, getApplications, updateStage } from "../api"
 
 const STAGES = ["applied", "screen", "assessment", "interview", "final", "offer", "rejected", "ghosted"]
 
@@ -33,6 +33,15 @@ export default function ApplicationsList() {
     load();
   }
 
+  async function handleDelete(id: number, company: string) {
+    const confirmed = window.confirm(`Delete the ${company} application? This can't be undone.`)
+    if (!confirmed) {
+      return
+    }
+    await deleteApplication(id);
+    load();
+  }
+
   if (loading) {
     return <p style={{color: "var(--ink-soft)"}}>Loading...</p>;
   }
@@ -56,6 +65,21 @@ export default function ApplicationsList() {
               <option key={stage} value={stage}>{stage}</option>
             ))}
           </select>
+
+          <button
+            onClick={() => handleDelete(app.id, app.company)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--rust)",
+              cursor: "pointer",
+              fontSize: 16,
+              fontFamily: "IBM Plex Mono, monospace",
+            }}
+            aria-label={`Delete ${app.company} application`}
+          >
+            ×
+          </button>
         </div>
       ))}
     </div>
