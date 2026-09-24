@@ -24,7 +24,17 @@ export default function Dashboard(){
   return (
     <div>
       <section>
-        <p className="section-label">Standing</p>
+        <p className="section-label">Right now</p>
+        {data.currentStanding.map((item) => (
+          <div className="tally-line" key={item.current_stage}>
+            <span>{item.current_stage}</span>
+            <span>{item.count}</span>
+          </div>
+        ))}
+      </section>
+
+      <section style={{marginTop: 36}}>
+        <p className="section-label">Where applications have been</p>
         {data.funnel.map((item) => (
           <div className="tally-line" key={item.stage}>
             <span>{item.stage}</span>
