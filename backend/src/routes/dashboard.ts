@@ -6,6 +6,7 @@ import { sql } from "drizzle-orm";
 export const dashboardRouter = Router();
 
 dashboardRouter.get("/", async(_req, res) => {
+  // how many applications EVER reached each stage, in the process, overall.
   const funnel = await database.execute(sql`
     SELECT stage, COUNT(DISTINCT application_id) AS count
     FROM stage_events
@@ -20,6 +21,13 @@ dashboardRouter.get("/", async(_req, res) => {
     LIMIT 10
     `)
 
+  // how many applications are sitting at each stage RIGHT NOW.
+  const currentStanding = await database.execute(sql`
+    SELECT current_stage, COUNT(*) AS count
+    FROM applications
+    GROUP BY current_stage
+  `);
+
   const stalledApplications = await database.execute(sql`
     SELECT a.id, a.company, a.role, a.current_stage
     FROM applications a
@@ -30,5 +38,10 @@ dashboardRouter.get("/", async(_req, res) => {
     AND a.current_stage NOT IN ('rejected', 'offer')
   `)
 
-  res.json({funnel: funnel.rows, topSkills: topSkills.rows, stalledApplications: stalledApplications.rows})
+  res.json({
+    funnel: funnel.rows, 
+    currentStanding: currentStanding.rows, 
+    topSkills: topSkills.rows, 
+    stalledApplications: stalledApplications.rows
+  })
 })
