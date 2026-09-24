@@ -64,6 +64,7 @@ export async function updateStage(id: number, stage: string): Promise<void> {
 
 export type DashboardData = {
   funnel: { stage: string; count: number}[];
+  currentStanding: { current_stage: string; count: number }[];
   topSkills: { requirement: string; count: number}[];
   stalled: { id: number; company: string; role: string; current_stage: string}[];
 }
@@ -77,6 +78,7 @@ export async function getDashboard(): Promise<DashboardData> {
   const data = await res.json();
   return {
     funnel: data.funnel,
+    currentStanding: data.currentStanding,
     topSkills: data.topSkills,
     stalled: data.stalledApplications,
   };
