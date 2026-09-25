@@ -6,9 +6,9 @@ import { desc, eq } from "drizzle-orm";
 import z from "zod";
 
 
-export const applicationsRouter = Router();
+export const router = Router();
 
-applicationsRouter.post("/", async (req, res) => {
+router.post("/", async (req, res) => {
   const parsed = createApplicationSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({
     error: z.flattenError(parsed.error)
@@ -46,7 +46,7 @@ applicationsRouter.post("/", async (req, res) => {
   res.status(201).json(newApp);
 })
 
-applicationsRouter.get("/", async(_req, res) => {
+router.get("/", async(_req, res) => {
   const all = await database
     .select()
     .from(applications)
@@ -55,7 +55,7 @@ applicationsRouter.get("/", async(_req, res) => {
   res.json(all);
 })
   
-applicationsRouter.patch("/:id/stage", async (req, res) => {
+router.patch("/:id/stage", async (req, res) => {
   const parsed = updateStageSchema.safeParse(req.body);
 
   if(!parsed.success) {
@@ -87,7 +87,7 @@ applicationsRouter.patch("/:id/stage", async (req, res) => {
   })
 })
 
-applicationsRouter.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const id = Number(req.params.id);
 
   await database

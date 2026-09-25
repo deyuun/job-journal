@@ -3,9 +3,9 @@ import { database } from "../db/index.js";
 import { sql } from "drizzle-orm";
 
 
-export const dashboardRouter = Router();
+export const router = Router();
 
-dashboardRouter.get("/", async(_req, res) => {
+router.get("/", async(_req, res) => {
   // how many applications EVER reached each stage, in the process, overall.
   const funnel = await database.execute(sql`
     SELECT stage, COUNT(DISTINCT application_id) AS count
