@@ -43,9 +43,18 @@ ${jobDescription}`;
   const choice = await data.choices[0];
   const rawText = choice.message.content ?? "";
 
+  // Take everything from the first { to the last }, which also handles
+  // code fences or stray text around the JSON
   const start = rawText.indexOf("{");
   const end = rawText.lastIndexOf("}");
-  const cleaned = start !== -1 && end > start ? rawText.slice(start, end + 1): rawText;
+  let cleaned: string;
+  if (start !== -1 && end > start) {
+    // Found a { and a later }, so keep only what's between them
+    cleaned = rawText.slice(start, end + 1);
+  } else {
+    // No usable braces, so leave the text alone let JSON.parse fail below
+    cleaned = rawText;
+  }
 
   // The model sometimes wraps JSON in ```json fences
   // const cleaned = rawText.replace(/```json|```/g, "").trim();
