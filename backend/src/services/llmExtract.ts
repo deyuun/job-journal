@@ -1,9 +1,16 @@
 import { extractedRequirementsSchema } from "../validators/schemas.js";
 
 export async function extractRequirements(jobDescription: string): Promise<string[]>{
-  const prompt = `Read this job posting and list the concrete skills, technologies, and 
-requirements mentioned (e.g. "React", "3 years experience", "Bachelor's degree").
-Respond with ONLY valid JSON in this exact shape, nothing else:
+  const prompt = `Extract the technical requirements from this job posting.
+
+Rules:
+- Use short, standard names, like "React", "TypeScript", "SQL", "Git", "Playwright", "Azure", "Node.js".
+- One skill per item. Split combined phrases: "JavaScript or TypeScript" becomes "JavaScript" and "TypeScript".
+- Include technologies, frameworks, tools, and platforms. Include experience and degree requirements as short items, like "2 years experience".
+- Skip soft skills and generic phrases such as communication, teamwork, remote work, or quality mindset.
+- No duplicates. Maximum 20 items.
+
+Respond with ONLY valid JSON in this exact shape:
 {"requirements": ["item1", "item2"]}
 
 Job posting:
@@ -20,6 +27,8 @@ ${jobDescription}`;
       messages: [{ role: "user", content: prompt }],
       // this is for consistent extraction, not creative variation
       temperature: 0,
+      reasoning_effort: "low",
+      max_completion_tokens: 2000,
     }),
   });
 
@@ -31,16 +40,28 @@ ${jobDescription}`;
   }
 
   const data = await response.json();
-  const rawText = data.choices[0].message.content;
+  const choice = await data.choices[0];
+  const rawText = choice.message.content ?? "";
+
+  const start = rawText.indexOf("{");
+  const end = rawText.lastIndexOf("}");
+  const cleaned = start !== -1 && end > start ? rawText.slice(start, end + 1): rawText;
 
   // The model sometimes wraps JSON in ```json fences
-  const cleaned = rawText.replace(/```json|```/g, "").trim();
+  // const cleaned = rawText.replace(/```json|```/g, "").trim();
 
   let parsed: unknown;
 
   try {
     parsed = JSON.parse(cleaned);
   } catch {
+    // finish_reason "length" means the label was cut off by the token limit
+    console.error(
+      "Could not parse LLM output, finish_reason:",
+      choice.finish_reason,
+      "content:",
+      rawText.slice(0, 500)
+    );
     throw new Error("LLM did not return valid JSON");
   }
 
