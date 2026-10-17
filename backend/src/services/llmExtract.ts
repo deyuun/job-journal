@@ -16,7 +16,7 @@ ${jobDescription}`;
       Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant",
+      model: "openai/gpt-oss-20b",
       message: [{ role: "user", content: prompt }],
       // this is for consistent extraction, not creative variation
       temperature: 0,
@@ -24,7 +24,10 @@ ${jobDescription}`;
   });
 
   if (!response.ok) {
-    throw new Error(`LLM request failed: ${response.status}`);
+    // Groq explains what went wrong in the response body. Include it,
+    // otherwise all we ever see is a bare status code.
+    const errorBody = await response.text();
+    throw new Error(`LLM request failed: ${response.status} ${errorBody}`);
   }
 
   const data = await response.json();
