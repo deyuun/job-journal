@@ -17,7 +17,7 @@ ${jobDescription}`;
     },
     body: JSON.stringify({
       model: "openai/gpt-oss-20b",
-      message: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: prompt }],
       // this is for consistent extraction, not creative variation
       temperature: 0,
     }),
