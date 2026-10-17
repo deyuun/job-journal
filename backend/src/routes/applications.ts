@@ -4,6 +4,7 @@ import { applications, jobRequirements, stageEvents } from "../db/schema.js";
 import { database } from "../db/index.js";
 import { desc, eq } from "drizzle-orm";
 import z from "zod";
+import { extractRequirements } from "../services/llmExtract.js";
 
 
 export const router = Router();
@@ -14,7 +15,7 @@ router.post("/", async (req, res) => {
     error: z.flattenError(parsed.error)
   })
 
-  const {company, role, jobDescription, requirements} = parsed.data;
+  const {company, role, jobDescription} = parsed.data;
 
   const [newApp] = await database
     .insert(applications)
@@ -32,16 +33,31 @@ router.post("/", async (req, res) => {
       applicationId: newApp.id,
       stage: "applied"
     })
-
-  if (requirements && requirements.length > 0){
-    await database.insert(jobRequirements).values(
-      requirements.map((requirement) => ({
-        applicationId: newApp.id,
-        requirement,
-        source:  "manual",
-      }))
-    )
+  // v2: this ask the AI to read the JD instead of taking manually typed skills.
+  // it's also wrapped in try/catch so a flaky free-tier API failure doesn't stop the application itself from saving. Extraction can be retried later.
+  try {
+    const requirements = await extractRequirements(jobDescription);
+    if (requirements.length > 0) {
+      await database.insert(jobRequirements).values(
+        requirements.map((requirement) => ({
+          applicationId: newApp.id,
+          requirement,
+          source: "ai",
+        }))
+      )
+    }
+  } catch (error) {
+    console.error("Extraction failed, application still saved:", error)
   }
+  // if (requirements && requirements.length > 0){
+  //   await database.insert(jobRequirements).values(
+  //     requirements.map((requirement) => ({
+  //       applicationId: newApp.id,
+  //       requirement,
+  //       source:  "manual",
+  //     }))
+  //   )
+  // }
 
   res.status(201).json(newApp);
 })
