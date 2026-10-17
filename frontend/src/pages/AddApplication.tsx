@@ -5,7 +5,7 @@ export default function AddApplication() {
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
-  const [requirementsText, setRequirementsText] = useState("");
+  // const [requirementsText, setRequirementsText] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,18 +19,12 @@ export default function AddApplication() {
     setError("");
     setSaving(true);
     try {
-      const requirements = requirementsText
-        .split(",")
-        .map((r) => r.trim())
-        .filter(Boolean);
-
       await createApplication({
-        company, role, jobDescription, requirements
+        company, role, jobDescription
       });
       setCompany("");
       setRole("");
-      setJobDescription("");    
-      setRequirementsText("");
+      setJobDescription("");
     } catch {
       setError("Couldn't save that. Check the backend is running.");
     } finally {
@@ -61,18 +55,10 @@ export default function AddApplication() {
         />
       </div>
 
-      <div className="field" style={{marginBottom: 18}}>
-        <label>Skills you noticed (comma seperated)</label>
-        <input
-          value={requirementsText}
-          onChange={(e) => setRequirementsText(e.target.value)}
-          placeholder="React, Typescript, 2 years experience"
-        />
-        {error && <p style={{ color: "var(--rust)", fontSize: 13 }}>{error}</p>} 
-        <button className="file-btn" type="submit" disabled={saving}>
-          {saving ? "Filing..." : "File this entry"}
-        </button>
-      </div>
+      {error && <p style={{ color: "var(--rust", fontSize: 13}}>{error}</p>}
+      <button className="file-btn" type="submit" disabled={saving}>
+        {saving ? "Filing..." : "File this entry"}
+      </button>    
     </form>
   )
 }
