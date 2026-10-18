@@ -6,8 +6,9 @@ export async function extractRequirements(jobDescription: string): Promise<strin
 Rules:
 - Use short, standard names, like "React", "TypeScript", "SQL", "Git", "Playwright", "Azure", "Node.js".
 - One skill per item. Split combined phrases: "JavaScript or TypeScript" becomes "JavaScript" and "TypeScript".
-- Include technologies, frameworks, tools, and platforms. Include experience and degree requirements as short items, like "2 years experience".
-- Skip soft skills and generic phrases such as communication, teamwork, remote work, or quality mindset.
+- Include only technologies, frameworks, languages, tools, and platforms.
+- Skip years of experience, soft skills, and generic phrases such as communication, teamwork, remote work, or quality mindset.
+- If the posting requires a degree, include one item: "Degree required". Do not include it if the posting says a degree is preferred, optional, or equivalent experience is accepted.
 - No duplicates. Maximum 20 items.
 
 Respond with ONLY valid JSON in this exact shape:
