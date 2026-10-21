@@ -5,7 +5,6 @@ export default function AddApplication() {
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [jobDescription, setJobDescription] = useState("");
-  // const [requirementsText, setRequirementsText] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 

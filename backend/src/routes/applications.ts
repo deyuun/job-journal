@@ -49,15 +49,6 @@ router.post("/", async (req, res) => {
   } catch (error) {
     console.error("Extraction failed, application still saved:", error)
   }
-  // if (requirements && requirements.length > 0){
-  //   await database.insert(jobRequirements).values(
-  //     requirements.map((requirement) => ({
-  //       applicationId: newApp.id,
-  //       requirement,
-  //       source:  "manual",
-  //     }))
-  //   )
-  // }
 
   res.status(201).json(newApp);
 })

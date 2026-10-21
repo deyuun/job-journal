@@ -14,7 +14,7 @@ export const updateStageSchema = z.object({
   ])
 })
 
-// New: the shape requires the AI to respond in. This validates the AI's JSON response
+// This shape requires the AI to respond in. This validates the AI's JSON response
 // against this before trusting it, the same way it validates the incoming request bodies.
 export const extractedRequirementsSchema = z.object({
   requirements: z.array(z.string()),
