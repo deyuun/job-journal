@@ -19,3 +19,8 @@ export const updateStageSchema = z.object({
 export const extractedRequirementsSchema = z.object({
   requirements: z.array(z.string()),
 })
+
+// Shape of a date edit. The date input on the page sends "YYYY-MM-DD"
+ export const updateDateSchema = z.object({
+  dateApplied: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use the format YYYY-MM-DD"),
+ })
