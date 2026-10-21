@@ -64,10 +64,19 @@ export default function ApplicationsList() {
     <div>
       {apps.map((app, index) => {
         const isExpanded = expandedId === app.id;
+        let rowClass = "ledger-row";
+        if (index === 0) {
+          rowClass = "ledger-row first-row";
+        }
 
-          return (
+        let toggleSymbol = "+";
+        if (isExpanded) {
+          toggleSymbol = "-";
+        }
+
+        return (
             <div key={app.id}>
-              <div className={`ledger-row ${index === 0 ? "first-row": ""}`}>
+              <div className={rowClass}>
                 <div className={`tab ${tabClass(app.currentStage)}`} />
                 
                 <span

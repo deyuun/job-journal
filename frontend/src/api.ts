@@ -13,7 +13,7 @@ export async function createApplication(input: {
   company: string;
   role: string;
   jobDescription: string;
-  requirements: string[];
+  // requirements: string[]; 
 }): Promise<Application> {
   const res = await fetch(`${BASE_URL}/applications`, {
     method: "POST",

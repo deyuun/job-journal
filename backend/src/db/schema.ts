@@ -1,6 +1,6 @@
 import {integer, pgTable, serial, text, timestamp} from "drizzle-orm/pg-core";
 
-
+// this defines the PostgreSQL - (applications - main)
 export const applications = pgTable("applications", {
   id: serial("id").primaryKey(),
   company: text("company").notNull(),
