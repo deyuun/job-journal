@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createApplicationSchema, updateStageSchema } from "../validators/schemas.js";
+import { createApplicationSchema, updateDateSchema, updateStageSchema } from "../validators/schemas.js";
 import { applications, jobRequirements, stageEvents } from "../db/schema.js";
 import { database } from "../db/index.js";
 import { desc, eq } from "drizzle-orm";
@@ -110,3 +110,41 @@ router.delete("/:id", async (req, res) => {
   res.status(204).send();
 })
 
+/**
+ * PATCH /applications/:id/date
+ * Lets you correct the date an application was filed under.
+ */
+router.patch("/:id/date", async (req, res) => {
+  const parsed = updateDateSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: z.flattenError(parsed.error)
+    })
+  }
+
+  const id = Number(req.params.id);
+
+  // Noon UTC instead of midnight, so the calendar doesnt slip day before or after
+  // when it's shown in a different time zone
+  const newDate = new Date(`${parsed.data.dateApplied}T12:00:00Z`);
+
+  // The format check for example ("2026-13-45" through, but that isn't a real date)
+  if (Number.isNaN(newDate.getTime())) {
+    return res.status(400).json({
+      error: "That isn't a real date"
+    });
+  }
+
+  await database.update(applications)
+    .set({
+      dateApplied: newDate
+    })
+    .where(
+      eq(
+        applications.id, id
+      ));
+  res.json({
+    id, dateApplied: newDate
+  })
+})
