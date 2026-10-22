@@ -62,6 +62,20 @@ export async function updateStage(id: number, stage: string): Promise<void> {
   }
 }
 
+export async function updateDate(id: number, dateApplied: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/applications/${id}/date`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ dateApplied }),
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to update date")
+  }
+}
+
 export type DashboardData = {
   funnel: { stage: string; count: number}[];
   currentStanding: { current_stage: string; count: number }[];
