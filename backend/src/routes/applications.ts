@@ -129,8 +129,9 @@ router.patch("/:id/date", async (req, res) => {
   // when it's shown in a different time zone
   const newDate = new Date(`${parsed.data.dateApplied}T12:00:00Z`);
 
+  const year = newDate.getUTCFullYear();
   // The format check for example ("2026-13-45" through, but that isn't a real date)
-  if (Number.isNaN(newDate.getTime())) {
+  if (Number.isNaN(newDate.getTime()) || year < 2000 || year > 2100) {
     return res.status(400).json({
       error: "That isn't a real date"
     });
