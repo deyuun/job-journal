@@ -120,7 +120,6 @@ export default function ApplicationsList() {
   ]);
 
   async function load() {
-    setLoading(true);
     const data = await getApplications();
     setApps(data);
     setLoading(false);
@@ -147,6 +146,12 @@ export default function ApplicationsList() {
     }
 
     await updateDate(id, value);
+    
+    // Open the month it moved into
+    const newMonth = value.slice(0, 7);
+    if (!openMonths.includes(newMonth)) {
+      setOpenMonths([...openMonths, newMonth]);
+    }
     load();
   }
   async function handleDelete(id: number, company: string) {
