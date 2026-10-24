@@ -257,3 +257,67 @@ Everything sits inside this centered column. */
   height: 3px;
   background-color: var(--pine);
 }
+
+/* =======
+   MONTH GROUPS (Open cases)
+   One row per month. Click it to show that month's applications.
+   ======= 
+*/
+
+.month-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ink);
+  cursor: pointer;
+}
+
+.month-toggle {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--ink-soft);
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.month-label {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  flex: 1;
+}
+
+.month-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
+.month-meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* This indents the applications from the month above it*/
+.month-body {
+  padding-left: 26px;
+  margin-bottom: 8px;
+}
+
+/* This is the date in application row example: "Sep 14" */
+.ledger-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  width: 48px;
+  flex-shrink: 0;
+}
+
+/* Shown in a row that is expanded from each application*/
+.date-input {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  padding: 3px 6px;
+  background-color: var(--paper-raised);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+}
