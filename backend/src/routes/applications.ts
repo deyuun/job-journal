@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createApplicationSchema, updateDateSchema, updateStageSchema } from "../validators/schemas.js";
+import { createApplicationSchema, updateDateSchema, updateDetailsSchema, updateStageSchema } from "../validators/schemas.js";
 import { applications, jobRequirements, stageEvents } from "../db/schema.js";
 import { database } from "../db/index.js";
 import { desc, eq } from "drizzle-orm";
@@ -15,11 +15,16 @@ router.post("/", async (req, res) => {
     error: z.flattenError(parsed.error)
   })
 
-  const {company, role, jobDescription} = parsed.data;
+  const {company, role, jobDescription, platform } = parsed.data;
+
+  let jobUrl: string | null = null;
+  if (parsed.data.jobUrl) {
+    jobUrl = parsed.data.jobUrl;
+  }
 
   const [newApp] = await database
     .insert(applications)
-    .values({company, role, jobDescription, currentStage: "applied" })
+    .values({company, role, jobDescription, platform, jobUrl, currentStage: "applied" })
     .returning();
 
   if (!newApp) {
@@ -113,7 +118,7 @@ router.delete("/:id", async (req, res) => {
 /**
  * PATCH /applications/:id/date
  * Lets you correct the date an application was filed under.
- */
+*/
 router.patch("/:id/date", async (req, res) => {
   const parsed = updateDateSchema.safeParse(req.body);
 
@@ -148,4 +153,36 @@ router.patch("/:id/date", async (req, res) => {
   res.json({
     id, dateApplied: newDate
   })
+})
+
+/**
+ * PATCH /applications/:id/details
+ * This can change the platform and link of an application
+*/
+
+router.patch("/:id/details", async (req, res) => {
+  const parsed = updateDetailsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({error: z.flattenError(parsed.error)})
+  }
+
+  const id = Number(req.params.id);
+  const { platform } = parsed.data;
+
+  // An empty string means the link was cleared
+  let jobUrl: string | null = null;
+  if (parsed.data.jobUrl !== "") {
+    jobUrl = parsed.data.jobUrl
+  }
+
+  await database
+    .update(applications)
+      .set({
+        platform, jobUrl
+      })
+        .where((
+          eq(applications.id, id)
+        ))
+
+  res.json({ id, platform, jobUrl })
 })
