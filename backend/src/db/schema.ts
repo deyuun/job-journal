@@ -8,6 +8,8 @@ export const applications = pgTable("applications", {
   jobDescription: text("job_description").notNull(),
   currentStage: text("current_stage").notNull().default("applied"),
   dateApplied: timestamp("date_applied").notNull().defaultNow(),
+  platform: text("platform"),
+  jobUrl: text("job_url"),
 })
 
 export const jobRequirements = pgTable("job_requirements", {
