@@ -22,6 +22,8 @@ export async function createApplication(input: {
   company: string;
   role: string;
   jobDescription: string;
+  platform: string;
+  jobUrl: string;
   // requirements: string[]; 
 }): Promise<Application> {
   const res = await fetch(`${BASE_URL}/applications`, {
