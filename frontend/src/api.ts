@@ -1,5 +1,12 @@
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+// Keep in sync with PLATFORMS in the backend validator
+export const PLATFORMS = [
+  "LinkedIn", "Upwork", "Facebook", "Indeed", "FreeUp", "Kalibrr", "Gigcx",
+  "Galasya", "Jobstreet", "BossJob", "OnlineJobs", "Naukrigulf", "JobsLin",
+  "Uplilft", "Others",
+];
+
 export type Application = {
   id: number;
   company: string;
@@ -7,6 +14,8 @@ export type Application = {
   jobDescription: string;
   currentStage: string;
   dateApplied: string;
+  platform: string | null;
+  jobUrl: string | null;
 };
 
 export async function createApplication(input: {
@@ -96,4 +105,18 @@ export async function getDashboard(): Promise<DashboardData> {
     topSkills: data.topSkills,
     stalled: data.stalledApplications,
   };
+}
+
+export async function updateDetails(id: number, platform: string, jobUrl: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/applications/${id}/details`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      platform, jobUrl
+    })
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to update details")
+  }
 }
