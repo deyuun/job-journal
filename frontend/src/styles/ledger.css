@@ -313,11 +313,45 @@ Everything sits inside this centered column. */
 }
 
 /* Shown in a row that is expanded from each application*/
-.date-input {
+.date-input, 
+.detail-input {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   padding: 3px 6px;
   background-color: var(--paper-raised);
   border: 1px solid var(--rule);
   color: var(--ink);
+}
+
+/* Dropdowns on the new entry form exact style like other fields */
+.field select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  font-family: 'Public Sans', sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  padding: 4px 0;
+}
+
+.field select:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+
+/* The platform name on each row */
+.ledger-platform {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  width: 104px;
+  flex-shrink: 0;
+}
+
+.platform-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
 }
