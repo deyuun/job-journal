@@ -3,9 +3,45 @@ import {
   type Application,
   deleteApplication,
   getApplications,
+  PLATFORMS,
   updateDate,
   updateStage,
+  updateDetails,
+
 } from '../api';
+
+const PLATFORM_COLORS: Record<string, string> = {
+  LinkedIn: "#0A66C2",
+  Facebook: "#1877F2",
+  Upwork: "#14A800",
+  Indeed: "#2164F3",
+  Kalibrr: "#2D6CDF",
+  Jobstreet: "#0D3880",
+  Naukrigulf: "#509e6e",   
+  FreeUp: "var(--ink-soft)",      // TODO: add brand hex
+  Gigcx: "var(--ink-soft)",       // TODO: add brand hex
+  Galasya: "var(--ink-soft)",     // TODO: add brand hex
+  BossJob: "var(--ink-soft)",     // TODO: add brand hex
+  OnlineJobs: "var(--ink-soft)",  // TODO: add brand hex
+  JobsLin: "var(--ink-soft)",     // TODO: add brand hex
+  Uplilft: "var(--ink-soft)",     // TODO: add brand hex
+  Others: "var(--ink-soft)",
+}
+
+function platformColor(platform: string): string {
+  const color = PLATFORM_COLORS[platform];
+
+  if (color) {
+    return color
+  }
+  return "var(--ink-soft)";
+}
+
+type DetailsDraft = {
+  id: number;
+  platform: string;
+  jobUrl: string;
+}
 
 const STAGES = [
   'applied',
@@ -119,6 +155,10 @@ export default function ApplicationsList() {
     monthKey(new Date()),
   ]);
 
+  // The platform and link being edited in the open row. null means no edit in progress.
+  const [detailsDraft, setDetailsDraft] = useState<DetailsDraft | null>(null);
+  const [detailsError, setDetailsError] = useState("");
+
   async function load() {
     const data = await getApplications();
     setApps(data);
@@ -165,7 +205,34 @@ export default function ApplicationsList() {
     load();
   }
 
+  async function handleDetailsSave(id: number) {
+    if (detailsDraft === null || detailsDraft.id !== id) {
+      return;
+    }
+
+    const link = detailsDraft.jobUrl.trim();
+    if (link !== "" && !link.startsWith("http://") && !link.startsWith("https://")) {
+      setDetailsError("The link needs to start with http:// or https://");
+      return;
+    }
+
+    try {
+      await updateDetails(id, detailsDraft.platform, link);
+    } catch {
+      setDetailsError("Couldn't save the details.")
+      return
+    }
+
+    setDetailsDraft(null);
+    setDetailsError("");
+    load();
+  }
+
   function toggleExpanded(id: number) {
+    // Switching rows, or closing one, drops any unsaved platform/link edit
+    setDetailsDraft(null);
+    setDetailsError('');
+
     if (expandedId === id) {
       setExpandedId(null);
     } else {
@@ -224,6 +291,35 @@ export default function ApplicationsList() {
                     toggleSymbol = '-';
                   }
 
+                  // What the platform and link inputs show: the draft while you're editing,
+                  // otherwise what's saved
+                  let platformValue = "";
+                  if (app.platform) {
+                    platformValue = app.platform;
+                  }
+
+                  let linkValue = "";
+                  if (app.jobUrl) {
+                    linkValue = app.jobUrl;
+                  }
+
+                  let isEditingDetails = false;
+                  if (detailsDraft !== null && detailsDraft.id === app.id) {
+                    platformValue = detailsDraft.platform;
+                    linkValue = detailsDraft.jobUrl;
+                    isEditingDetails = true;
+                  }
+                  
+                  // Save only appears when there's an edit and a platform is picked
+                  let canSaveDetails = false;
+                  if (isEditingDetails && platformValue !== "") {
+                    canSaveDetails = true;
+                  }
+
+                  let openHref = "";
+                  if (app.jobUrl && (app.jobUrl.startsWith("http://") || app.jobUrl.startsWith("https://"))) {
+                    openHref = app.jobUrl
+                  }
                   return (
                     <div key={app.id}>
                       <div className='ledger-row'>
@@ -256,6 +352,17 @@ export default function ApplicationsList() {
                           style={{ cursor: 'pointer' }}
                         >
                           {app.role}
+                        </div>
+
+                        <div className='ledger-platform'>
+                          {app.platform && (
+                            <span>
+                              <span className='platform-dot' style={{ backgroundColor: platformColor(app.platform)}}
+                              />
+                              {app.platform}
+                            </span>
+                          )}
+                          {!app.platform && <span style={{ color: "var(--ink-soft)"}}>not set</span>}
                         </div>
 
                         <div className='ledger-date'>
@@ -303,7 +410,7 @@ export default function ApplicationsList() {
                             lineHeight: 1.6,
                           }}
                         >
-                          <div
+                        <div
                             style={{
                               marginBottom: 12,
                               fontFamily: 'IBM Plex Mono, monospace',
@@ -322,9 +429,79 @@ export default function ApplicationsList() {
                                 }
                               />
                             </label>
-                          </div>
+                        </div>
+                          
+                        <div
+                            style={{
+                              marginBottom: 12,
+                              fontFamily: "IBM Plex Mono, monospace",
+                              fontSize: 12,
+                              color: "var(--ink-soft)",
+                            }}
+                          > 
+                            <label>
+                              Platform{" "}
+                              <select
+                                className='detail-input'
+                                value={platformValue}
+                                onChange={(e) => setDetailsDraft({ id: app.id, platform: e.target.value, jobUrl: linkValue})}
+                              >
+                                <option value="">Select Platform</option>
+                                {PLATFORMS.map((name) => (
+                                  <option key={name} value={name}>{name}</option>
+                                ))}
+                              </select>
+                            </label>
+                        </div>
 
-                          <div
+                        <div
+                          style={{
+                            marginBottom: 12,
+                            fontFamily: "IBM Plex Mono, monospace",
+                            fontSize: 12,
+                            color: "var(--ink-soft)"
+                          }}>
+                          <label>
+                            Link{" "}
+                            <input
+                              className='detail-input'
+                              style={{ width: 280 }}
+                              placeholder='https://...'
+                              value={linkValue}
+                              onChange={(e) => setDetailsDraft({ id: app.id, platform: platformValue, jobUrl: e.target.value})}
+                            />
+                          </label>
+                          {canSaveDetails && (
+                            <button
+                              onClick={() => handleDetailsSave(app.id)}
+                              style={{
+                                marginLeft: 8,
+                                background: "transparent",
+                                border: "none",
+                                color: "var(--pine)",
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontFamily: "IBM Plex Mono, monospace",
+                              }}
+                            >
+                              save
+                            </button>
+                          )}
+                          {openHref !== "" && (
+                            <a
+                              href={openHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ marginLeft: 8, color: "var(--pine)" }}
+                            >
+                              open
+                            </a>
+                          )}
+                        </div>
+                        {detailsError !== "" && (
+                          <p style={{ color: "var(--rust)", fontSize: 12, margin: "0 0 12px" }}>{detailsError}</p>
+                        )}
+                        <div
                             style={{
                               whiteSpace: 'pre-wrap',
                               maxHeight: 220,
@@ -332,7 +509,7 @@ export default function ApplicationsList() {
                             }}
                           >
                             {app.jobDescription}
-                          </div>
+                        </div>
                         </div>
                       )}
                     </div>
