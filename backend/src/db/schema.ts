@@ -31,3 +31,12 @@ export const stageEvents = pgTable("stage_events", {
   stage: text("stage").notNull(),
   occurredAt: timestamp("occurred_at").notNull().defaultNow(),
 })
+
+export const notes = pgTable("notes", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id")
+    .references(() => applications.id)
+    .notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})
