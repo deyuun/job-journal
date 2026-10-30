@@ -247,6 +247,14 @@ router.post("/:id/notes", async (req, res) => {
   }
 
   const id = Number(req.params.id);
+  const [existing] = await database
+    .select({ id: applications.id })
+    .from(applications)
+    .where(eq(applications.id, id));
+
+  if (!existing) {
+    return res.status(404).json({ error: "Application not found" });
+  }
 
   const [newNote] = await database
     .insert(notes)
@@ -274,7 +282,7 @@ router.patch("/:id/notes/:noteId", async (req, res) => {
     .update(notes)
     .set({
       body: parsed.data.body
-    })
+    })s
     .where(and(
       eq(notes.id, noteId), eq(notes.applicationId, id)
     ))
