@@ -18,6 +18,13 @@ export type Application = {
   jobUrl: string | null;
 };
 
+export type TimelineItem = {
+  kind: "stage" | "note";
+  id: number;
+  date: string;
+  text: string;
+}
+
 export async function createApplication(input: {
   company: string;
   role: string;
@@ -120,5 +127,57 @@ export async function updateDetails(id: number, platform: string, jobUrl: string
 
   if (!res.ok) {
     throw new Error("Failed to update details")
+  }
+}
+
+// TIMELINE and NOTES
+
+export async function getTimeline(id: number): Promise <TimelineItem[]> {
+  const res = await fetch(`${BASE_URL}/applications/${id}/timeline`);
+  if (!res.ok) {
+    throw new Error("Failed to load the Timeline")
+  }
+  return res.json();
+}
+
+export async function addNote(id: number, body: string): Promise<void>{
+  const res = await fetch(`${BASE_URL}/applications/${id}/notes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      body
+    })
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to add the role");
+  }
+}
+
+export async function updateNote(id: number, noteId: number, body: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/applications/${id}/notes/${noteId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ body })
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to update the note");
+  }
+}
+
+export async function deleteNote(id: number, noteId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/applications/${id}/notes/${noteId}`, {
+    method: "DELETE",
+  })
+
+  if (!res.ok) {
+    throw new Error(
+      "Failed to delete the role"
+    )
   }
 }
