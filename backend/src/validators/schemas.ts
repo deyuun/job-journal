@@ -65,12 +65,18 @@ export const extractedRequirementsSchema = z.object({
 })
 
 // Shape of a date edit. The date input on the page sends "YYYY-MM-DD"
- export const updateDateSchema = z.object({
+export const updateDateSchema = z.object({
   dateApplied: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use the format YYYY-MM-DD"),
- })
+})
 
- // Shape an edit to the platform and link from the expanded row
- export const updateDetailsSchema = z.object({
+// Shape an edit to the platform and link from the expanded row
+export const updateDetailsSchema = z.object({
   platform: z.enum(PLATFORMS, { error: "Pick the platform" }),
   jobUrl: optionalJobUrl,
- })
+})
+
+// The shape of a note, used for both adding and editing. 
+// trim() runs first, so a note made only of spaces counts as empty
+export const noteSchema = z.object({
+  body: z.string().trim().min(1, "Write something first").max(2000, "Keep a note under 2000 characters"),
+})
