@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { createApplicationSchema, updateDateSchema, updateDetailsSchema, updateStageSchema } from "../validators/schemas.js";
-import { applications, jobRequirements, stageEvents } from "../db/schema.js";
+import { createApplicationSchema, noteSchema, updateDateSchema, updateDetailsSchema, updateStageSchema } from "../validators/schemas.js";
+import { applications, jobRequirements, notes, stageEvents } from "../db/schema.js";
 import { database } from "../db/index.js";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import z from "zod";
 import { extractRequirements } from "../services/llmExtract.js";
 
@@ -109,6 +109,9 @@ router.delete("/:id", async (req, res) => {
     .delete(jobRequirements)
       .where(eq(jobRequirements.applicationId, id));
   await database
+    .delete(notes)
+      .where(eq(notes.applicationId, id));
+  await database
     .delete(applications)
       .where(eq(applications.id, id))
 
@@ -185,4 +188,136 @@ router.patch("/:id/details", async (req, res) => {
         ))
 
   res.json({ id, platform, jobUrl })
+})
+
+type TimelineItem = {
+  kind: "stage" | "note";
+  id: number;
+  date: Date;
+  // for stage name and notes
+  text: string;
+};
+
+
+/**
+ * GET /applications/:id/timeline
+ * Stage changes and notes in one list, oldest first
+*/
+router.get("/:id/timeline",  async (req, res) => {
+  const id = Number(req.params.id);
+
+
+  const events = await database.select().from(stageEvents).where(eq(stageEvents.applicationId, id));
+  const noteRows = await database.select().from(notes).where(eq(notes.applicationId, id));
+
+  const items: TimelineItem[] = [];
+
+  for (const event of events) {
+    items.push({
+      kind: "stage",
+      id: event.id,
+      date: event.occurredAt,
+      text: event.stage
+    })
+  }
+
+  for (const note of noteRows) {
+     items.push({ 
+      kind: "note", 
+      id: note.id, 
+      date: note.createdAt, 
+      text: note.body 
+    });
+  }
+
+  items.sort((a, b) => 
+    a.date.getTime() - b.date.getTime()
+  );
+
+  res.json(items);
+})
+
+router.post("/:id/notes", async (req, res) => {
+  const parsed = noteSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: z.flattenError(parsed.error)
+    })
+  }
+
+  const id = Number(req.params.id);
+
+  const [newNote] = await database
+    .insert(notes)
+    .values({ 
+      applicationId: id, 
+      body: parsed.data.body 
+    })
+    .returning();
+
+  res.status(201).json(newNote);
+});
+
+router.patch("/:id/notes/:noteId", async (req, res) => {
+  const parsed = noteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: z.flattenError(parsed.error)
+    })
+  }
+  
+  const id = Number(req.params.id);
+  const noteId = Number(req.params.noteId);
+
+  const updated = await database
+    .update(notes)
+    .set({
+      body: parsed.data.body
+    })
+    .where(and(
+      eq(notes.id, noteId), eq(notes.applicationId, id)
+    ))
+    .returning();
+  
+  if (updated.length === 0) {
+    return res.status(404).json({
+      error: "Note not found"
+    })
+  }
+
+  await database
+    .update(notes)
+    .set({ body: parsed.data.body })
+    .where(and(eq(notes.id, noteId), eq(notes.applicationId, id)));
+
+  res.json({
+    id: noteId,
+    body: parsed.data.body
+  })
+})
+
+/**
+ * DELETE /applications/:id/notes/:noteId
+*/
+router.delete("/:id/notes/:noteId", async (req, res) => {
+  const id = Number(req.params.id);
+  const noteId = Number(req.params.noteId);
+
+  const deleted = await database
+  .delete(notes)
+  .where(and(eq(notes.id, noteId), eq(notes.applicationId, id)))
+  .returning();
+
+  if (deleted.length === 0) {
+    return res.status(404).json({ error: "Note not found" });
+  }
+
+  await database
+    .delete(notes)
+    .where(and(
+      eq(notes.id, noteId), eq(notes.applicationId, id)
+    ))
+
+  res.status(204).send();
 })
