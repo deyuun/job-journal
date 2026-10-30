@@ -26,7 +26,7 @@
 Everything sits inside this centered column. */
 
 .sheet {
-  max-width: 760px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 56px 24px;
 }
@@ -200,6 +200,10 @@ Everything sits inside this centered column. */
   font-weight: 500;
   font-size: 15px;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ledger-role {
@@ -352,6 +356,5 @@ Everything sits inside this centered column. */
   display: inline-block;
   width: 8px;
   height: 8px;
-  border-radius: 50%;
   margin-right: 6px;
 }

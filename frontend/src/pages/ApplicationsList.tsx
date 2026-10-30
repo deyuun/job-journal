@@ -340,6 +340,7 @@ export default function ApplicationsList() {
 
                         <div
                           className='ledger-company'
+                          title={app.company}
                           onClick={() => toggleExpanded(app.id)}
                           style={{ cursor: 'pointer' }}
                         >
@@ -348,6 +349,7 @@ export default function ApplicationsList() {
 
                         <div
                           className='ledger-role'
+                          title={app.role}
                           onClick={() => toggleExpanded(app.id)}
                           style={{ cursor: 'pointer' }}
                         >
