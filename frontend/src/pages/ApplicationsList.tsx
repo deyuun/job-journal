@@ -7,8 +7,31 @@ import {
   updateDate,
   updateStage,
   updateDetails,
+  TimelineItem,
+  getTimeline,
+  addNote,
+  updateNote,
+  deleteNote,
 
 } from '../api';
+
+const linkButtonStyle: React.CSSProperties = {
+  background: 'transparent',
+  border: 'none',
+  color: 'var(--pine)',
+  cursor: 'pointer',
+  fontSize: 12,
+  fontFamily: 'IBM Plex Mono, monospace',
+  marginRight: 8,
+}
+
+function timelineDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-Us', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
 
 const PLATFORM_COLORS: Record<string, string> = {
   LinkedIn: "#0A66C2",
@@ -159,6 +182,18 @@ export default function ApplicationsList() {
   const [detailsDraft, setDetailsDraft] = useState<DetailsDraft | null>(null);
   const [detailsError, setDetailsError] = useState("");
 
+  // The journal of the open row. appId says which row it belongs to, so a slow
+  // load for one row can't show up under another.
+  const [timeline, setTimeline] = useState<{ appId: number; items: TimelineItem[] } | null>(null);
+
+  // The text in the "write a note" box
+  const [noteDraft, setNoteDraft] = useState('');
+
+  // The note being edited: its id and the text so far. null means none
+  const [editingNote, setEditingNote] = useState<{id: number; text: string} | null>(null);
+
+  const [noteError, setNoteError] = useState('');
+
   async function load() {
     const data = await getApplications();
     setApps(data);
@@ -169,8 +204,43 @@ export default function ApplicationsList() {
     load();
   }, []);
 
+  async function loadTimeline(id: number) {
+    try {
+      const items = await getTimeline(id);
+      setTimeline({
+        appId: id,
+        items
+      })
+    } catch {
+      setTimeline({ appId: id, items: []})
+      setNoteError("Couldn't load the journal");
+    }
+  }
+
+  async function handleAddNote(id: number) {
+    const text = noteDraft.trim();
+
+    if (text === '') {
+      return;
+    }
+
+    try {
+      await addNote(id, text);
+    } catch {
+      setNoteError("Couldn't save the note");
+      return
+    }
+
+    setNoteDraft('');
+    setNoteError('');
+    loadTimeline(id);
+  }
+
   async function handleStageChange(id: number, stage: string) {
     await updateStage(id, stage);
+    if (expandedId === id) {
+      loadTimeline(id);
+    }
     load();
   }
 
@@ -205,6 +275,27 @@ export default function ApplicationsList() {
     load();
   }
 
+  async function handleDeleteNote(id: number, noteId: number) {
+    const confirmed = window.confirm("Delete this note? This can't be undone")
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      await deleteNote(id, noteId);
+    } catch {
+      setNoteError("Couldn't delete the note")
+      return
+    }
+
+    if (editingNote !== null && editingNote.id === noteId) {
+      setEditingNote(null);
+    }
+
+    loadTimeline(id);
+  }
+
   async function handleDetailsSave(id: number) {
     if (detailsDraft === null || detailsDraft.id !== id) {
       return;
@@ -228,15 +319,43 @@ export default function ApplicationsList() {
     load();
   }
 
+  async function handleSaveNoteToEdit(id: number) {
+    if (editingNote === null) {
+      return
+    }
+
+    const text = editingNote.text.trim();
+    if (text === '') {
+      setNoteError("A note can't be empty. Delete it instead");
+      return
+    }
+
+    try {
+      await updateNote(id, editingNote.id, text);
+    } catch {
+      setNoteError("Couldn't save the change");
+      return
+    }
+
+    setEditingNote(null);
+    setNoteError('');
+    loadTimeline(id)
+  }
+
   function toggleExpanded(id: number) {
     // Switching rows, or closing one, drops any unsaved platform/link edit
     setDetailsDraft(null);
     setDetailsError('');
+    setNoteDraft('');
+    setNoteError('');
+    setEditingNote(null);
+    setTimeline(null);
 
     if (expandedId === id) {
       setExpandedId(null);
     } else {
       setExpandedId(id);
+      loadTimeline(id);
     }
   }
 
@@ -320,6 +439,16 @@ export default function ApplicationsList() {
                   if (app.jobUrl && (app.jobUrl.startsWith("http://") || app.jobUrl.startsWith("https://"))) {
                     openHref = app.jobUrl
                   }
+
+                  // The journal for this row, ready once the loaded timeline belongs to it
+                  let timelineReady = false;
+                  let timelineItems: TimelineItem[] = [];
+
+                  if (timeline !== null && timeline.appId === app.id) {
+                    timelineReady = true;
+                    timelineItems = timeline.items
+                  }
+
                   return (
                     <div key={app.id}>
                       <div className='ledger-row'>
@@ -412,106 +541,228 @@ export default function ApplicationsList() {
                             lineHeight: 1.6,
                           }}
                         >
-                        <div
-                            style={{
-                              marginBottom: 12,
-                              fontFamily: 'IBM Plex Mono, monospace',
-                              fontSize: 12,
-                              color: 'var(--ink-soft)',
-                            }}
-                          >
-                            <label>
-                              Applied on{' '}
-                              <input
-                                className='date-input'
-                                type='date'
-                                value={toDateInputValue(app.dateApplied)}
-                                onChange={(e) =>
-                                  handleDateChange(app.id, e.target.value)
-                                }
-                              />
-                            </label>
-                        </div>
-                          
-                        <div
+                          <div
+                              style={{
+                                marginBottom: 12,
+                                fontFamily: 'IBM Plex Mono, monospace',
+                                fontSize: 12,
+                                color: 'var(--ink-soft)',
+                              }}
+                            >
+                              <label>
+                                Applied on{' '}
+                                <input
+                                  className='date-input'
+                                  type='date'
+                                  value={toDateInputValue(app.dateApplied)}
+                                  onChange={(e) =>
+                                    handleDateChange(app.id, e.target.value)
+                                  }
+                                />
+                              </label>
+                          </div>
+                            
+                          <div
+                              style={{
+                                marginBottom: 12,
+                                fontFamily: "IBM Plex Mono, monospace",
+                                fontSize: 12,
+                                color: "var(--ink-soft)",
+                              }}
+                            > 
+                              <label>
+                                Platform{" "}
+                                <select
+                                  className='detail-input'
+                                  value={platformValue}
+                                  onChange={(e) => setDetailsDraft({ id: app.id, platform: e.target.value, jobUrl: linkValue})}
+                                >
+                                  <option value="">Select Platform</option>
+                                  {PLATFORMS.map((name) => (
+                                    <option key={name} value={name}>{name}</option>
+                                  ))}
+                                </select>
+                              </label>
+                          </div>
+
+                          <div
                             style={{
                               marginBottom: 12,
                               fontFamily: "IBM Plex Mono, monospace",
                               fontSize: 12,
-                              color: "var(--ink-soft)",
-                            }}
-                          > 
+                              color: "var(--ink-soft)"
+                            }}>
                             <label>
-                              Platform{" "}
-                              <select
+                              Link{" "}
+                              <input
                                 className='detail-input'
-                                value={platformValue}
-                                onChange={(e) => setDetailsDraft({ id: app.id, platform: e.target.value, jobUrl: linkValue})}
-                              >
-                                <option value="">Select Platform</option>
-                                {PLATFORMS.map((name) => (
-                                  <option key={name} value={name}>{name}</option>
-                                ))}
-                              </select>
+                                style={{ width: 280 }}
+                                placeholder='https://...'
+                                value={linkValue}
+                                onChange={(e) => setDetailsDraft({ id: app.id, platform: platformValue, jobUrl: e.target.value})}
+                              />
                             </label>
-                        </div>
-
-                        <div
-                          style={{
-                            marginBottom: 12,
-                            fontFamily: "IBM Plex Mono, monospace",
-                            fontSize: 12,
-                            color: "var(--ink-soft)"
-                          }}>
-                          <label>
-                            Link{" "}
-                            <input
-                              className='detail-input'
-                              style={{ width: 280 }}
-                              placeholder='https://...'
-                              value={linkValue}
-                              onChange={(e) => setDetailsDraft({ id: app.id, platform: platformValue, jobUrl: e.target.value})}
-                            />
-                          </label>
-                          {canSaveDetails && (
-                            <button
-                              onClick={() => handleDetailsSave(app.id)}
+                            {canSaveDetails && (
+                              <button
+                                onClick={() => handleDetailsSave(app.id)}
+                                style={{
+                                  marginLeft: 8,
+                                  background: "transparent",
+                                  border: "none",
+                                  color: "var(--pine)",
+                                  cursor: "pointer",
+                                  fontSize: 12,
+                                  fontFamily: "IBM Plex Mono, monospace",
+                                }}
+                              >
+                                save
+                              </button>
+                            )}
+                            {openHref !== "" && (
+                              <a
+                                href={openHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ marginLeft: 8, color: "var(--pine)" }}
+                              >
+                                open
+                              </a>
+                            )}
+                          </div>
+                          {detailsError !== "" && (
+                            <p style={{ color: "var(--rust)", fontSize: 12, margin: "0 0 12px" }}>{detailsError}</p>
+                          )}
+    
+                          <div style={{ marginBottom: 12 }}>
+                            <div
                               style={{
-                                marginLeft: 8,
-                                background: "transparent",
-                                border: "none",
-                                color: "var(--pine)",
-                                cursor: "pointer",
-                                fontSize: 12,
-                                fontFamily: "IBM Plex Mono, monospace",
+                                fontFamily: 'Fraunces, serif',
+                                
+                                fontSize: 13,
+                                color: 'var(--ink-soft)',
+                                marginBottom: 6,
                               }}
                             >
-                              save
-                            </button>
-                          )}
-                          {openHref !== "" && (
-                            <a
-                              href={openHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ marginLeft: 8, color: "var(--pine)" }}
+                              Journal (notes)
+                            </div>
+
+                            {!timelineReady && (
+                              <p style={{ color: 'var(--ink-soft)', fontSize: 12, margin: 0 }}>Loading journal...</p>
+                            )}
+
+                            {timelineReady && (
+                              <div style={{ maxHeight: 220, overflow: 'auto' }}>
+                                {timelineItems.map((item) => {
+                                  let isEditingThis = false;
+                                  let editText = '';
+                                  if (editingNote !== null && item.kind === 'note' && editingNote.id === item.id) {
+                                    isEditingThis = true;
+                                    editText = editingNote.text;
+                                  }
+
+                                  return (
+                                    <div
+                                      key={`${item.kind}-${item.id}`}
+                                      style={{
+                                        display: 'flex',
+                                        gap: 12,
+                                        padding: '6px 0',
+                                        borderBottom: '1px dotted var(--rule)',
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          fontFamily: 'IBM Plex Mono, monospace',
+                                          fontSize: 12,
+                                          color: 'var(--ink-soft)',
+                                          width: 96,
+                                          flexShrink: 0,
+                                        }}
+                                      >
+                                        {timelineDate(item.date)}
+                                      </div>
+
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        {item.kind === 'stage' && (
+                                          <span style={{ fontFamily: 'IBM Plex Mono, monospace', fontSize: 12 }}>
+                                            <span
+                                              className={`tab ${tabClass(item.text)}`}
+                                              style={{ display: 'inline-block', height: 12, marginRight: 8 }}
+                                            />
+                                            {item.text}
+                                          </span>
+                                        )}
+
+                                        {item.kind === 'note' && !isEditingThis && (
+                                          <div style={{ whiteSpace: 'pre-wrap' }}>{item.text}</div>
+                                        )}
+
+                                        {item.kind === 'note' && isEditingThis && (
+                                          <div>
+                                            <textarea
+                                              className='detail-input'
+                                              style={{ width: '100%', minHeight: 56, resize: 'vertical' }}
+                                              value={editText}
+                                              onChange={(e) => setEditingNote({ id: item.id, text: e.target.value })}
+                                            />
+                                            <button onClick={() => handleSaveNoteToEdit(app.id)} style={linkButtonStyle}>
+                                              save
+                                            </button>
+                                            <button onClick={() => setEditingNote(null)} style={linkButtonStyle}>
+                                              cancel
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {item.kind === 'note' && !isEditingThis && (
+                                        <div style={{ flexShrink: 0 }}>
+                                          <button
+                                            onClick={() => setEditingNote({ id: item.id, text: item.text })}
+                                            style={linkButtonStyle}
+                                          >
+                                            edit
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteNote(app.id, item.id)}
+                                            style={{ ...linkButtonStyle, color: 'var(--rust)', marginRight: 0 }}
+                                          >
+                                            del
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            <div style={{ marginTop: 8 }}>
+                              <textarea
+                                className='detail-input'
+                                style={{ width: '100%', minHeight: 20, resize: 'vertical' }}
+                                placeholder='Write what happened...'
+                                value={noteDraft}
+                                onChange={(e) => setNoteDraft(e.target.value)}
+                              />
+                              <button onClick={() => handleAddNote(app.id)} style={linkButtonStyle}>
+                                add note
+                              </button>
+                            </div>
+
+                            {noteError !== '' && (
+                              <p style={{ color: 'var(--rust)', fontSize: 12, margin: '6px 0 0' }}>{noteError}</p>
+                            )}
+                          </div>
+                          <div
+                              style={{
+                                whiteSpace: 'pre-wrap',
+                                maxHeight: 300,
+                                overflow: 'auto',
+                              }}
                             >
-                              open
-                            </a>
-                          )}
-                        </div>
-                        {detailsError !== "" && (
-                          <p style={{ color: "var(--rust)", fontSize: 12, margin: "0 0 12px" }}>{detailsError}</p>
-                        )}
-                        <div
-                            style={{
-                              whiteSpace: 'pre-wrap',
-                              maxHeight: 220,
-                              overflow: 'auto',
-                            }}
-                          >
-                            {app.jobDescription}
-                        </div>
+                              {app.jobDescription}
+                          </div>
                         </div>
                       )}
                     </div>

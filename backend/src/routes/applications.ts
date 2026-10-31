@@ -282,7 +282,7 @@ router.patch("/:id/notes/:noteId", async (req, res) => {
     .update(notes)
     .set({
       body: parsed.data.body
-    })s
+    })
     .where(and(
       eq(notes.id, noteId), eq(notes.applicationId, id)
     ))
