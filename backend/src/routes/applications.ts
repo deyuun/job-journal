@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { createApplicationSchema, updateStageSchema } from "../validators/schemas.js";
-import { applications, jobRequirements, stageEvents } from "../db/schema.js";
+import { createApplicationSchema, noteSchema, updateDateSchema, updateDetailsSchema, updateStageSchema } from "../validators/schemas.js";
+import { applications, jobRequirements, notes, stageEvents } from "../db/schema.js";
 import { database } from "../db/index.js";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import z from "zod";
 import { extractRequirements } from "../services/llmExtract.js";
 
@@ -15,11 +15,16 @@ router.post("/", async (req, res) => {
     error: z.flattenError(parsed.error)
   })
 
-  const {company, role, jobDescription} = parsed.data;
+  const {company, role, jobDescription, platform } = parsed.data;
+
+  let jobUrl: string | null = null;
+  if (parsed.data.jobUrl) {
+    jobUrl = parsed.data.jobUrl;
+  }
 
   const [newApp] = await database
     .insert(applications)
-    .values({company, role, jobDescription, currentStage: "applied" })
+    .values({company, role, jobDescription, platform, jobUrl, currentStage: "applied" })
     .returning();
 
   if (!newApp) {
@@ -104,9 +109,223 @@ router.delete("/:id", async (req, res) => {
     .delete(jobRequirements)
       .where(eq(jobRequirements.applicationId, id));
   await database
+    .delete(notes)
+      .where(eq(notes.applicationId, id));
+  await database
     .delete(applications)
       .where(eq(applications.id, id))
 
   res.status(204).send();
 })
 
+/**
+ * PATCH /applications/:id/date
+ * Lets you correct the date an application was filed under.
+*/
+router.patch("/:id/date", async (req, res) => {
+  const parsed = updateDateSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: z.flattenError(parsed.error)
+    })
+  }
+
+  const id = Number(req.params.id);
+
+  // Noon UTC instead of midnight, so the calendar doesnt slip day before or after
+  // when it's shown in a different time zone
+  const newDate = new Date(`${parsed.data.dateApplied}T12:00:00Z`);
+
+  const year = newDate.getUTCFullYear();
+  // The format check for example ("2026-13-45" through, but that isn't a real date)
+  if (Number.isNaN(newDate.getTime()) || year < 2000 || year > 2100) {
+    return res.status(400).json({
+      error: "That isn't a real date"
+    });
+  }
+
+  await database.update(applications)
+    .set({
+      dateApplied: newDate
+    })
+    .where(
+      eq(
+        applications.id, id
+      ));
+  res.json({
+    id, dateApplied: newDate
+  })
+})
+
+/**
+ * PATCH /applications/:id/details
+ * This can change the platform and link of an application
+*/
+
+router.patch("/:id/details", async (req, res) => {
+  const parsed = updateDetailsSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({error: z.flattenError(parsed.error)})
+  }
+
+  const id = Number(req.params.id);
+  const { platform } = parsed.data;
+
+  // An empty string means the link was cleared
+  let jobUrl: string | null = null;
+  if (parsed.data.jobUrl !== "") {
+    jobUrl = parsed.data.jobUrl
+  }
+
+  await database
+    .update(applications)
+      .set({
+        platform, jobUrl
+      })
+        .where((
+          eq(applications.id, id)
+        ))
+
+  res.json({ id, platform, jobUrl })
+})
+
+type TimelineItem = {
+  kind: "stage" | "note";
+  id: number;
+  date: Date;
+  // for stage name and notes
+  text: string;
+};
+
+
+/**
+ * GET /applications/:id/timeline
+ * Stage changes and notes in one list, oldest first
+*/
+router.get("/:id/timeline",  async (req, res) => {
+  const id = Number(req.params.id);
+
+
+  const events = await database.select().from(stageEvents).where(eq(stageEvents.applicationId, id));
+  const noteRows = await database.select().from(notes).where(eq(notes.applicationId, id));
+
+  const items: TimelineItem[] = [];
+
+  for (const event of events) {
+    items.push({
+      kind: "stage",
+      id: event.id,
+      date: event.occurredAt,
+      text: event.stage
+    })
+  }
+
+  for (const note of noteRows) {
+     items.push({ 
+      kind: "note", 
+      id: note.id, 
+      date: note.createdAt, 
+      text: note.body 
+    });
+  }
+
+  items.sort((a, b) => 
+    a.date.getTime() - b.date.getTime()
+  );
+
+  res.json(items);
+})
+
+router.post("/:id/notes", async (req, res) => {
+  const parsed = noteSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: z.flattenError(parsed.error)
+    })
+  }
+
+  const id = Number(req.params.id);
+  const [existing] = await database
+    .select({ id: applications.id })
+    .from(applications)
+    .where(eq(applications.id, id));
+
+  if (!existing) {
+    return res.status(404).json({ error: "Application not found" });
+  }
+
+  const [newNote] = await database
+    .insert(notes)
+    .values({ 
+      applicationId: id, 
+      body: parsed.data.body 
+    })
+    .returning();
+
+  res.status(201).json(newNote);
+});
+
+router.patch("/:id/notes/:noteId", async (req, res) => {
+  const parsed = noteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: z.flattenError(parsed.error)
+    })
+  }
+  
+  const id = Number(req.params.id);
+  const noteId = Number(req.params.noteId);
+
+  const updated = await database
+    .update(notes)
+    .set({
+      body: parsed.data.body
+    })
+    .where(and(
+      eq(notes.id, noteId), eq(notes.applicationId, id)
+    ))
+    .returning();
+  
+  if (updated.length === 0) {
+    return res.status(404).json({
+      error: "Note not found"
+    })
+  }
+
+  await database
+    .update(notes)
+    .set({ body: parsed.data.body })
+    .where(and(eq(notes.id, noteId), eq(notes.applicationId, id)));
+
+  res.json({
+    id: noteId,
+    body: parsed.data.body
+  })
+})
+
+/**
+ * DELETE /applications/:id/notes/:noteId
+*/
+router.delete("/:id/notes/:noteId", async (req, res) => {
+  const id = Number(req.params.id);
+  const noteId = Number(req.params.noteId);
+
+  const deleted = await database
+  .delete(notes)
+  .where(and(eq(notes.id, noteId), eq(notes.applicationId, id)))
+  .returning();
+
+  if (deleted.length === 0) {
+    return res.status(404).json({ error: "Note not found" });
+  }
+
+  await database
+    .delete(notes)
+    .where(and(
+      eq(notes.id, noteId), eq(notes.applicationId, id)
+    ))
+
+  res.status(204).send();
+})
