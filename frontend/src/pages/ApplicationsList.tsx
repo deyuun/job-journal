@@ -12,6 +12,7 @@ import {
   addNote,
   updateNote,
   deleteNote,
+  deleteStageEvent,
 
 } from '../api';
 
@@ -294,6 +295,27 @@ export default function ApplicationsList() {
     }
 
     loadTimeline(id);
+  }
+
+  async function handleDeleteStageEvent(id: number, eventId: number) {
+    const confirmed = window.confirm(
+      "Remove this stage change? If it's the latest one, the application goes back to the stage before it."
+    )
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteStageEvent(id, eventId);
+    } catch {
+      setNoteError("Couldn't remove the stage entry");
+      return
+    }
+
+    setNoteError('');
+    loadTimeline(id);
+    load();
   }
 
   async function handleDetailsSave(id: number) {
@@ -660,6 +682,15 @@ export default function ApplicationsList() {
                                     editText = editingNote.text;
                                   }
 
+                                  // The first stage entry is where the application started, so it gets no del
+                                  let firstStageId = -1;
+                                  for (const entry of timelineItems) {
+                                    if (entry.kind === 'stage') {
+                                      firstStageId = entry.id;
+                                      break;
+                                    }
+                                  }
+
                                   return (
                                     <div
                                       key={`${item.kind}-${item.id}`}
@@ -714,7 +745,6 @@ export default function ApplicationsList() {
                                           </div>
                                         )}
                                       </div>
-
                                       {item.kind === 'note' && !isEditingThis && (
                                         <div style={{ flexShrink: 0 }}>
                                           <button
@@ -725,6 +755,17 @@ export default function ApplicationsList() {
                                           </button>
                                           <button
                                             onClick={() => handleDeleteNote(app.id, item.id)}
+                                            style={{ ...linkButtonStyle, color: 'var(--rust)', marginRight: 0 }}
+                                          >
+                                            del
+                                          </button>
+                                        </div>
+                                      )}
+
+                                      {item.kind === 'stage' && item.id !== firstStageId && (
+                                        <div style={{ flexShrink: 0 }}>
+                                          <button
+                                            onClick={() => handleDeleteStageEvent(app.id, item.id)}
                                             style={{ ...linkButtonStyle, color: 'var(--rust)', marginRight: 0 }}
                                           >
                                             del
