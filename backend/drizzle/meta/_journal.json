@@ -8,6 +8,20 @@
       "when": 1788963385467,
       "tag": "0000_eager_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792925193271,
+      "tag": "0001_spotty_the_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793326133859,
+      "tag": "0002_fixed_runaways",
+      "breakpoints": true
     }
   ]
 }

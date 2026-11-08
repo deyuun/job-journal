@@ -8,6 +8,8 @@ export const applications = pgTable("applications", {
   jobDescription: text("job_description").notNull(),
   currentStage: text("current_stage").notNull().default("applied"),
   dateApplied: timestamp("date_applied").notNull().defaultNow(),
+  platform: text("platform"),
+  jobUrl: text("job_url"),
 })
 
 export const jobRequirements = pgTable("job_requirements", {
@@ -28,4 +30,13 @@ export const stageEvents = pgTable("stage_events", {
     .notNull(),
   stage: text("stage").notNull(),
   occurredAt: timestamp("occurred_at").notNull().defaultNow(),
+})
+
+export const notes = pgTable("notes", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id")
+    .references(() => applications.id)
+    .notNull(),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 })

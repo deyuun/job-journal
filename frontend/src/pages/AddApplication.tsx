@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createApplication } from "../api";
+import { createApplication, PLATFORMS } from "../api";
 
 export default function AddApplication() {
   const [company, setCompany] = useState("");
@@ -7,22 +7,34 @@ export default function AddApplication() {
   const [jobDescription, setJobDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [platform, setPlatform] = useState("");
+  const [jobUrl, setJobUrl] = useState("");
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!company || !role || !jobDescription){
-      setError("Fill in all three fields before filing.");
+    if (!company || !role || !jobDescription || !platform){
+      setError("Fill in the company, role, platform, and posting text before filing.");
       return
     }
+
+    const link = jobUrl.trim();
+
+    if (link !== "" && !link.startsWith("http://") && !link.startsWith("https://")) {
+      setError("The link needs to starts with http:// or https://");
+      return
+    }
+
     setError("");
     setSaving(true);
     try {
       await createApplication({
-        company, role, jobDescription
+        company, role, platform, jobUrl: link, jobDescription
       });
       setCompany("");
       setRole("");
+      setPlatform("");
+      setJobUrl("");
       setJobDescription("");
     } catch {
       setError("Couldn't save that. Check the backend is running.");
@@ -41,6 +53,23 @@ export default function AddApplication() {
         <div className="field" style={{ marginBottom: 18 }}>
           <label>Role</label>
           <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Junior backend developer"/>
+        </div>
+      </div>
+
+      <div className="intake-row">
+        <div className="field">
+          <label>Platform</label>
+          <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+            <option value="">Where did you find it?</option>
+            {PLATFORMS.map((name) => (
+              <option key={name} value={name}>{name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+            <label>Link to the post (optional)</label>
+            <input value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} placeholder="https://..."/>
         </div>
       </div>
 
