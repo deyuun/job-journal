@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createApplicationSchema, noteSchema, updateDateSchema, updateDetailsSchema, updateStageSchema } from "../validators/schemas.js";
 import { applications, jobRequirements, notes, stageEvents } from "../db/schema.js";
 import { database } from "../db/index.js";
-import { desc, eq, and } from "drizzle-orm";
+import { desc, eq, and, asc } from "drizzle-orm";
 import z from "zod";
 import { extractRequirements } from "../services/llmExtract.js";
 
@@ -328,4 +328,60 @@ router.delete("/:id/notes/:noteId", async (req, res) => {
     ))
 
   res.status(204).send();
+})
+
+router.delete("/:id/stage-events/:eventId", async (req, res) => {
+  const id = Number(req.params.id);
+  const eventId = Number(req.params.eventId);
+
+  // All of this application's stage changes, oldest first
+  const events = await database
+    .select()
+    .from(stageEvents)
+    .where(eq(stageEvents.applicationId, id))
+    .orderBy(asc(stageEvents.occurredAt), asc(stageEvents.id));
+
+  const target = events.find((event) => event.id === eventId);
+  if (!target) {
+    return res.status(404).json({
+      error: "Stage entry not found"
+    });
+  }
+
+  // The first entry is where the application started, so it stays
+  const first = events[0];
+  if (first && first.id === eventId) {
+    return res.status(400).json({
+      error: "The first entry can't be deleted"
+    });
+  }
+
+  // What's left after the delete, the last one is the new current stage
+  const remaining = events.filter((event) => event.id !== eventId);
+  const latest = remaining[remaining.length - 1];
+
+  if (!latest) {
+    return res.status(500).json({
+      error: "Nothing left in the history"
+    })
+  }
+
+  // A transaction makes both changes succeed or fail together, so the
+  // history and the current stage can't end up disagreeing
+
+  await database.transaction(async (transaction) => {
+    await transaction.delete(stageEvents).where(eq(stageEvents.id, eventId));
+    await transaction
+      .update(applications)
+      .set({
+        currentStage: latest.stage
+      })
+      .where(
+        eq(applications.id, id)
+      )
+  });
+
+  res.json({
+    currentStage: latest.stage
+  })
 })
