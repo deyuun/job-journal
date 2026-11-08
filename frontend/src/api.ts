@@ -181,3 +181,13 @@ export async function deleteNote(id: number, noteId: number): Promise<void> {
     )
   }
 }
+
+export async function deleteStageEvent(id: number, eventId: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/applications/${id}/stage-events/${eventId}`, {
+    method: "DELETE",
+  })
+
+  if (!res.ok) {
+    throw new Error("Failed to delete the stage entry")
+  }
+}
