@@ -75,25 +75,76 @@ Everything sits inside this centered column. */
 .masthead {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-end;
   border-bottom: 2px solid var(--ink);
   padding-bottom: 18px;
   margin-bottom: 36px;
+}
+/* Tagline under title */
+.tagline {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--ink-soft);
+  margin: 6px 0 0 0;
+}
+
+/* The notebook and pen drawing. The colors are set here and not in the JSX so they can use the same variables as the rest of the page*/
+.masthead-art {
+  flex-shrink: 0;
+  fill: none;
+  stroke: var(--pine);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.art-page {
+  fill: var(--paper-raised);
+}
+
+.art-lines {
+  stroke-width: 1.4;
+  opacity: 0.55;
+}
+
+.art-pen {
+  fill: var(--ink);  
+}
+
+.art-stamp {
+  stroke: var(--rust);
+}
+
+.art-stamp-text{
+  fill: var(--rust);
+  stroke: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+}
+
+@media (max-width: 720px) {
+  .masthead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
 }
 
 .masthead h1 {
   font-family: 'Fraunces', serif;
   font-weight: 500;
-  font-size: 32px;
+  font-size: 42px;
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
-.masthead .case-no {
+/*.masthead .case-no {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 13px;
   color: var(--ink-soft);
 }
-
+*/
 /* 
    NAVIGATION TABS
    The three links at the top: new entry / open cases / standing
