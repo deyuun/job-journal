@@ -37,8 +37,8 @@ export default function App() {
           <g className="art-stamp" transform="rotate(-12 42 30)">
             <circle cx="42" cy="30" r="25" />
             <circle cx="42" cy="30" r="21" strokeWidth="1" />
-            <text className="art-stamp-text" x="42" y="28" textAnchor="middle">FILE</text>
-            <text className="art-stamp-text" x="42" y="39" textAnchor="middle">SELF</text>
+            <text className="art-stamp-text" x="42" y="28" textAnchor="middle">JOB</text>
+            <text className="art-stamp-text" x="42" y="39" textAnchor="middle">LOG</text>
           </g>
         </svg>
       </div>
