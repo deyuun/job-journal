@@ -7,7 +7,8 @@
   --pine: #2E5D50;
   --rust: #8C3B2E;
   --amber: #8A6A2F;
-  
+  --paper-line: #D4CBBA;
+  --margin-line: rgba(140, 59, 46, 0.35);
 }
 
 /* Reset default browser spacing so padding/borders behave predictably */
@@ -15,11 +16,46 @@
   box-sizing: border-box;
 }
 
-.body {
+body {
   margin: 0;
   background-color: var(--paper);
   color: var(--ink);
   font-family: 'Public Sans', sans-serif;
+
+  background-image: linear-gradient(to bottom, transparent 31px, var(--paper-line) 31px);
+  background-size: 100% 32px;
+}
+
+body::before {
+  content: '';
+  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 64px;
+  width: 2px;
+  background-color: var(--margin-line);
+  pointer-events: none;
+}
+
+@media (min-width: 1000px) {
+  body::before {
+    display: block;
+  }
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  opacity: 0.07;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
 }
 
 /* PAGE LAYOUT 
@@ -27,8 +63,11 @@ Everything sits inside this centered column. */
 
 .sheet {
   max-width: 900px;
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
   padding: 56px 24px;
+  position: relative;
+  z-index: 1;
 }
 
 /* HEADER (top of the page) */
