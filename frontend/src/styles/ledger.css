@@ -192,7 +192,7 @@ Everything sits inside this centered column. */
 .intake-row {
   display: flex;
   gap: 28px;
-  margin-bottom: 24px;  
+  margin-bottom: 28px;  
 }
 
 .intake-row .field {
@@ -434,6 +434,47 @@ Everything sits inside this centered column. */
 .field select:focus {
   outline: none;
   border-bottom-color: var(--ink);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--ink-soft);
+}
+
+
+/* The lines scroll with the text in notebox. */
+.field textarea.ruled {
+  background-color: var(--paper-light);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 23px,
+    var(--paper-line) 23px,
+    var(--paper-line) 24px
+  );
+  background-attachment: local;
+  line-height: 24px;
+  font-size: 14px;
+  border: 1px solid var(--rule);
+  padding: 6px 12px;
+  min-height: 216px;
+}
+
+/* The small italic line above the button */
+.form-note {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 22px 0;
+}
+
+/* On a narrow screen the two columns stack */
+@media (max-width: 720px) {
+  .intake-row {
+    flex-direction: column;
+    gap: 20px;
+  }
 }
 
 /* The platform name on each row */

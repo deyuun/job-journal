@@ -43,51 +43,63 @@ export default function AddApplication() {
     }
   }
 
+  let buttonText = 'File this entry';
+  if (saving) {
+    buttonText = "Filing..."
+  }
+
   return (
-    <form className="intake" onSubmit={handleSubmit}>
-      <div className="intake-row">
-        <div className="field">
-          <label>Company</label>
-          <input value={company} onChange={(e) => setCompany(e.target.value) } placeholder="Acme Corp"/>
-        </div>
-        <div className="field" style={{ marginBottom: 18 }}>
-          <label>Role</label>
-          <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Junior backend developer"/>
-        </div>
-      </div>
-
-      <div className="intake-row">
-        <div className="field">
-          <label>Platform</label>
-          <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
-            <option value="">Where did you find it?</option>
-            {PLATFORMS.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
+    <div>
+      <p className="section-label">New entry</p>
+      <form className="intake" onSubmit={handleSubmit}>
+        <div className="intake-row">
+          <div className="field">
+            <label>Company</label>
+            <input value={company} onChange={(e) => setCompany(e.target.value) } placeholder="Acme Corp"/>
+          </div>
+          <div className="field">
+            <label>Role</label>
+            <input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Junior backend developer"/>
+          </div>
         </div>
 
-        <div className="field">
-            <label>Link to the post (optional)</label>
-            <input value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} placeholder="https://..."/>
+        <div className="intake-row">
+          <div className="field">
+            <label>Platform</label>
+            <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+              <option value="">Where did you find it?</option>
+              {PLATFORMS.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
+              <label>Link to the post (optional)</label>
+              <input value={jobUrl} onChange={(e) => setJobUrl(e.target.value)} placeholder="https://..."/>
+          </div>
         </div>
-      </div>
 
-      
-      <div className="field" style={{ marginBottom: 18 }}>
-        <label>Posting text</label>
-        <textarea
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-          placeholder="Paste the listing as written"
-        />
-      </div>
-
-      {error && <p style={{ color: "var(--rust", fontSize: 13}}>{error}</p>}
-      <button className="file-btn" type="submit" disabled={saving}>
-        {saving ? "Filing..." : "File this entry"}
-      </button>    
-    </form>
+        
+        <div className="field" style={{ marginBottom: 10 }}>
+          <label>Posting text</label>
+          <textarea
+            className="ruled"
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            placeholder="Paste the listing as written"
+          />
+        </div>
+        <p className="form-note">
+          When you file it, the skills in the posting are picked out and filed with it.
+        </p>
+        
+        {error && <p style={{ color: "var(--rust)", fontSize: 13}}>{error}</p>}
+        <button className="file-btn" type="submit" disabled={saving}>
+          {buttonText}
+        </button>    
+      </form>
+    </div>
   )
 }
 
