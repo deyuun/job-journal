@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react"
 import { type DashboardData, getDashboard } from "../api"
 
+const STAGES = ["applied", "screen", "assessment", "interview", "final", "offer", "rejected", "ghosted"]
+
+// This has the same colors from open cases
+function stageClass(stage: string) {
+  if (["interview", "final", "offer"].includes(stage)) {
+    return "moving";
+  }
+  if (["rejected", "ghosted"].includes(stage)) {
+    return "stalled";
+  }
+  return "waiting";
+}
+
 export default function Dashboard(){
   const [data, setData] = useState<DashboardData | null>(null);
 
@@ -16,10 +29,41 @@ export default function Dashboard(){
     return <p style={{color: "var(--ink-soft)"}}>Loading...</p>;
   }
 
-  const maxSkillCount = Math.max(
-    ...data.topSkills.map((skill) => skill.count),
-    1
-  )
+  // The database sends the stages in any order (yours came back alphabetical),
+  // so these loops put them in the same order as the pipeline.
+  // The counts arrive as text from Postgres, so Number() turns them into numbers.
+  const rightNow: { stage: string; count: number}[] = [];
+  for (const stage of STAGES) {
+    const found = data.currentStanding.find((item) => item.current_stage === stage);
+    if (found) {
+      rightNow.push({
+        stage, count: Number(found.count)
+      });
+    }
+  }
+
+  const everReached: { stage: string; count: number }[] = [];
+  for (const stage of STAGES) {
+    const found = data.funnel.find((item) => item.stage === stage);
+    if (found) {
+      everReached.push({
+        stage, count: Number(found.count)
+      })
+    }
+  }
+
+  // const maxSkillCount = Math.max(
+  //   ...data.topSkills.map((skill) => skill.count),
+  //   1
+  // )
+
+  // The biggest skill count, so the bars can be drawn as a share of it
+  let maxSkillCount = 1;
+  for (const skill of data.topSkills) {
+    if (Number(skill.count) > maxSkillCount) {
+      maxSkillCount = Number(skill.count);
+    }
+  }
 
   return (
     <div>
