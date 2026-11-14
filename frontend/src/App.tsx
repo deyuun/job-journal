@@ -13,7 +13,7 @@ export default function App() {
     <div className="sheet">
       <div className="masthead">
         <div>
-          <h1>Job Journal</h1>
+          <h1>The Job Journal</h1>
           <p className="tagline">A case file on my own job search.</p>
         </div>
 
