@@ -29,13 +29,17 @@ router.get("/", async(_req, res) => {
   `);
 
   const stalledApplications = await database.execute(sql`
-    SELECT a.id, a.company, a.role, a.current_stage
+    SELECT a.id, a.company, a.role, a.current_stage,
+      EXTRACT(DAY FROM (NOW() AT TIME ZONE 'UTC') - latest.last_change) AS days_quiet
     FROM applications a
-    WHERE a.id NOT IN (
-      SELECT application_id FROM stage_events
-      WHERE occurred_at > NOW() - INTERVAL '14 days'
-    )
+    JOIN (
+      SELECT application_id, MAX(occurred_at) AS last_change
+      FROM stage_events
+      GROUP BY application_id
+    ) latest ON latest.application_id = a.id
+    WHERE latest.last_change < (NOW() AT TIME ZONE 'UTC') - INTERVAL '14 days'
     AND a.current_stage NOT IN ('rejected', 'offer')
+    ORDER BY latest.last_change ASC
   `)
 
   res.json({
